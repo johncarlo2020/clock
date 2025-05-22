@@ -103,7 +103,6 @@
     }
 </style>
 
-
 <div class="container">
     <h3 class="mb-4" style="font-family: 'Orbitron', sans-serif; color: black;">
         Manage Clock Positions
@@ -158,56 +157,95 @@
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const originalClockData = [
+            { top: 148, left: 141, width: 490, height: 490 },
+            { top: 623, left: 18, width: 324, height: 341 },
+            { top: 305, left: 734, width: 290, height: 290 },
+            { top: 655, left: 500, width: 600, height: 600 },
+            { top: 1005, left: 62, width: 322, height: 322 },
+            { top: 1395, left: 125, width: 390, height: 390 },
+            { top: 1370, left: 700, width: 344, height: 344 },
+        ];
+
+        // Attach click handlers for edit buttons
         document.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', function () {
                 const nuc = this.getAttribute('data-nuc');
                 editClocks(nuc);
             });
         });
-    });
 
-    function editClocks(nuc) {
-        const url = "{{ route('clocks.edit', ':nuc') }}".replace(':nuc', nuc);
-        const updateUrl = "{{ route('clocks.update', ':nuc') }}".replace(':nuc', nuc);
+        // Event delegation for Reset buttons inside modalBody
+        document.getElementById('modalBody').addEventListener('click', function (event) {
+            if (event.target && event.target.classList.contains('reset-clock')) {
+                const idx = parseInt(event.target.getAttribute('data-index'));
+                resetClock(idx);
+            }
+        });
 
-        fetch(url, {
-            headers: { 'Accept': 'application/json' }
-        })
-            .then(res => res.json())
-            .then(clocks => {
-                let formHtml = '';
-                clocks.forEach((clock, i) => {
-                    formHtml += `
-                <div class="mb-3 border rounded p-3" style="border-color: #35334a;">
-                    <h6 style="color:#c9c9ff;">Clock ${i + 1}</h6>
-                    <input type="hidden" name="clocks[${i}][id]" value="${clock.id}">
-                    <div class="row">
-                        <div class="col">
-                            <label class="form-label" style="color:#ddd;">Top</label>
-                            <input type="text" name="clocks[${i}][top]" class="form-control bg-dark text-light border-secondary" value="${clock.top}">
-                        </div>
-                        <div class="col">
-                            <label class="form-label" style="color:#ddd;">Left</label>
-                            <input type="text" name="clocks[${i}][left]" class="form-control bg-dark text-light border-secondary" value="${clock.left}">
-                        </div>
-                        <div class="col">
-                            <label class="form-label" style="color:#ddd;">Width</label>
-                            <input type="text" name="clocks[${i}][width]" class="form-control bg-dark text-light border-secondary" value="${clock.width}">
-                        </div>
-                        <div class="col">
-                            <label class="form-label" style="color:#ddd;">Height</label>
-                            <input type="text" name="clocks[${i}][height]" class="form-control bg-dark text-light border-secondary" value="${clock.height}">
-                        </div>
-                    </div>
-                </div>
-                `;
-                });
+        function resetClock(index) {
+            const container = document.querySelector(`#modalBody > div[data-index="${index}"]`);
+            if (!container) return;
 
-                document.getElementById('modalBody').innerHTML = formHtml;
-                document.getElementById('clockForm').action = updateUrl;
-                new bootstrap.Modal(document.getElementById('clockModal')).show();
+            const original = originalClockData[index];
+            if (!original) return;
+
+            container.querySelector(`input[name="clocks[${index}][top]"]`).value = original.top;
+            container.querySelector(`input[name="clocks[${index}][left]"]`).value = original.left;
+            container.querySelector(`input[name="clocks[${index}][width]"]`).value = original.width;
+            container.querySelector(`input[name="clocks[${index}][height]"]`).value = original.height;
+        }
+
+        function editClocks(nuc) {
+            const url = "{{ route('clocks.edit', ':nuc') }}".replace(':nuc', nuc);
+            const updateUrl = "{{ route('clocks.update', ':nuc') }}".replace(':nuc', nuc);
+
+            fetch(url, {
+                headers: { 'Accept': 'application/json' }
             })
-            .catch(err => console.error(err));
-    }
+                .then(res => res.json())
+                .then(clocks => {
+                    let formHtml = '';
+                    clocks.forEach((clock, i) => {
+                        formHtml += `
+                        <div class="mb-3 border rounded p-3" style="border-color: #35334a;" data-index="${i}">
+                            <h6 style="color:#c9c9ff;">Clock ${i + 1}</h6>
+                            <input type="hidden" name="clocks[${i}][id]" value="${clock.id}">
+                            <div class="row align-items-end">
+                                <div class="col">
+                                    <label class="form-label" style="color:#ddd;">Top</label>
+                                    <input type="text" name="clocks[${i}][top]" class="form-control bg-dark text-light border-secondary" value="${clock.top}">
+                                </div>
+                                <div class="col">
+                                    <label class="form-label" style="color:#ddd;">Left</label>
+                                    <input type="text" name="clocks[${i}][left]" class="form-control bg-dark text-light border-secondary" value="${clock.left}">
+                                </div>
+                                <div class="col">
+                                    <label class="form-label" style="color:#ddd;">Width</label>
+                                    <input type="text" name="clocks[${i}][width]" class="form-control bg-dark text-light border-secondary" value="${clock.width}">
+                                </div>
+                                <div class="col">
+                                    <label class="form-label" style="color:#ddd;">Height</label>
+                                    <input type="text" name="clocks[${i}][height]" class="form-control bg-dark text-light border-secondary" value="${clock.height}">
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-warning reset-clock" data-index="${i}" style="height: 38px;">
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    });
+
+                    document.getElementById('modalBody').innerHTML = formHtml;
+                    document.getElementById('clockForm').action = updateUrl;
+
+                    const modal = new bootstrap.Modal(document.getElementById('clockModal'));
+                    modal.show();
+                })
+                .catch(err => console.error(err));
+        }
+    });
 </script>
 @endsection
