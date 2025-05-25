@@ -21,9 +21,9 @@ async function startStream() {
     video.srcObject = stream;
 }
 
-// Detect black frame areas
-function detectBlack() {
-    if (detectionPaused) return; // Skip detection if paused
+// Detect black or bright white frame areas
+function detectBlackOrBright() {
+    if (detectionPaused) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -32,38 +32,55 @@ function detectBlack() {
     const frame = context.getImageData(0, 0, canvas.width, canvas.height);
     const data = frame.data;
     let blackPixels = 0;
-    let totalPixels = data.length / 4;
+    let whitePixels = 0;
+    const totalPixels = data.length / 4;
 
     for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
 
-        // Stricter threshold for black pixel detection
         if (r < 30 && g < 30 && b < 30) {
             blackPixels++;
+        }
+
+        // Check for bright white pixels (all channels near 255)
+        if (r > 240 && g > 240 && b > 240) {
+            whitePixels++;
         }
     }
 
     const blackPercentage = (blackPixels / totalPixels) * 100;
-    // Detect if camera is covered: 90% or more pixels black
+    const whitePercentage = (whitePixels / totalPixels) * 100;
+
+    // Detect camera covered
     const isCovered = blackPercentage > 90;
 
-    if (isCovered !== lastStatus) {
-        lastStatus = isCovered;
+    // Detect bright white flash/light
+    const isBright = whitePercentage > 80;
 
-        if (isCovered) {
+    let newStatus = lastStatus;
+
+    if (isBright) {
+        console.log('Bright light detected');
+        newStatus = false;
+    } else {
+        newStatus = isCovered;
+    }
+
+    if (newStatus !== lastStatus) {
+        lastStatus = newStatus;
+
+        if (newStatus) {
             console.log('Camera Covered Detected');
-            toggleBrokenState(true);  // true means broken/covered
         } else {
-            console.log('Camera Not Covered');
-            toggleBrokenState(false);
+            console.log('Camera Not Covered or Bright Light Detected');
         }
 
+        toggleBrokenState(newStatus);
         pauseDetectionTemporarily();
     }
 }
-
 
 // Temporarily pause detection after change
 function pauseDetectionTemporarily() {
@@ -80,7 +97,7 @@ function pauseDetectionTemporarily() {
     const checkReady = setInterval(() => {
         if (video.readyState >= 2) {
             clearInterval(checkReady);
-            setInterval(detectBlack, 100);
+            setInterval(detectBlackOrBright, 100);
         }
     }, 100);
 })();
