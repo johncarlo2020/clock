@@ -6,31 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clock animation</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
 </head>
 
     <style>
-        @import "../../node_modules/bootstrap/scss/bootstrap";
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
 
 
         @font-face {
             font-family: 'DS-Digital';
-            src: url('../fonts/DS-DIGI.TTF') format('truetype');
+            src: url('assets/fonts/DS-DIGI.TTF') format('truetype');
         }
 
         @font-face {
             font-family: 'radio';
-            src: url('../fonts/RADIOLANDSLIM.ttf') format('truetype');
+            src: url('assets/fonts/RADIOLANDSLIM.ttf') format('truetype');
         }
 
         @font-face {
             font-family: 'radio-regular';
-            src: url('../fonts/RADIOLAND.TTF') format('truetype');
+            src: url('assets/fonts/RADIOLAND.TTF') format('truetype');
         }
 
         @font-face {
             font-family: 'digital-dismay';
-            src: url('../fonts/Digital-Dismay.otf') format('opentype');
+            src: url('assets/fonts/Digital-Dismay.otf') format('opentype');
         }
 
 
@@ -308,6 +309,11 @@
 <body>
     <video id="webcam" autoplay playsinline style="display: none;"></video>
     <canvas id="canvas" style="display: none;"></canvas>
+    <div id="calibrationStatus" style="margin: 10px 0; font-weight: bold;"></div>
+
+    <button id="calibrateWith" onclick="calibrate('withBottle')">Calibrate With Bottle</button>
+    <button id="calibrateWithout" onclick="calibrate('withoutBottle')">Calibrate Without Bottle</button>
+    <button id="startBtn" onclick="startDetection()" style="display: none;">Start Detection</button>
 
     <div class="clocks-container" id="clocksContainer">
         @foreach ($clocks as $index => $item)
