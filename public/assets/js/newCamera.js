@@ -128,7 +128,7 @@ async function calibrate(type) {
     if (bottlePresent !== lastStatus) {
       lastStatus = bottlePresent;
       console.log(bottlePresent ? 'Bottle is in place.' : 'Bottle is removed.');
-      toggleBrokenState(!bottlePresent);
+      toggleBrokenState(bottlePresent);
       pauseDetectionTemporarily();
     }
   }
