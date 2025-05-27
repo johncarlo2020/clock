@@ -6,7 +6,7 @@ let calibrationData = JSON.parse(localStorage.getItem('bottleCalibration')) || {
   const video = document.getElementById('webcam');
   const canvas = document.getElementById('canvas');
   const context = canvas.getContext('2d', { willReadFrequently: true });
-
+  const recalibrateBtn = document.getElementById('recalibrateBtn');
   const calibrateWithBtn = document.getElementById('calibrateWith');
   const calibrateWithoutBtn = document.getElementById('calibrateWithout');
   const startBtn = document.getElementById('startBtn');
@@ -34,10 +34,18 @@ let calibrationData = JSON.parse(localStorage.getItem('bottleCalibration')) || {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       video.srcObject = stream;
+
+      return new Promise(resolve => {
+        video.onloadedmetadata = () => {
+          video.play();
+          resolve(); // Wait until video metadata is loaded
+        };
+      });
     } catch (error) {
       console.error('Camera error:', error);
     }
   }
+
 
   const calibrationStatus = document.getElementById('calibrationStatus');
 
@@ -107,6 +115,8 @@ async function calibrate(type) {
     startBtn.style.display = 'none';
     clocksContainer.style.display = 'block';
     calibrationStatus.style.display = 'none';
+    recalibrateBtn.style.display = 'none';
+
     setInterval(() => {
       if (detectionEnabled && !detectionPaused) detectBottle();
     }, 200);
@@ -141,32 +151,36 @@ async function calibrate(type) {
 
   // On page load
   window.addEventListener('DOMContentLoaded', async () => {
-    await startStream();
+    clocksContainer.style.display = 'none';
+    await startStream(); // Wait for video to be fully initialized
 
-    // Wait until video ready
-    const checkReady = setInterval(() => {
-      if (video.readyState >= 2) {
-        clearInterval(checkReady);
-
-        if (calibrationData.withBottle && calibrationData.withoutBottle) {
-          // Calibration exists, skip calibration UI, start detection immediately
-          calibrateWithBtn.style.display = 'none';
-          calibrateWithoutBtn.style.display = 'none';
-          startBtn.style.display = 'none';
-          clocksContainer.style.display = 'block';
-
-          startDetection();
-          console.log('Calibration found. Skipping calibration, starting detection...');
-        } else {
-          // Calibration missing, show calibration buttons
-          calibrateWithBtn.style.display = 'inline-block';
-          calibrateWithoutBtn.style.display = 'inline-block';
-          startBtn.style.display = 'none';
-          clocksContainer.style.display = 'none';
-        }
-      }
-    }, 100);
+    if (calibrationData.withBottle && calibrationData.withoutBottle) {
+      calibrateWithBtn.style.display = 'none';
+      calibrateWithoutBtn.style.display = 'none';
+      startBtn.style.display = 'inline-block';
+      recalibrateBtn.style.display = 'inline-block';
+      calibrationStatus.textContent = 'Calibration data found. Ready to start detection.';
+    } else {
+      calibrateWithBtn.style.display = 'inline-block';
+      calibrateWithoutBtn.style.display = 'inline-block';
+      startBtn.style.display = 'none';
+      recalibrateBtn.style.display = 'none';
+      calibrationStatus.textContent = 'Please calibrate both with and without the bottle.';
+    }
   });
+
+
+// Recalibrate button logic
+recalibrateBtn.addEventListener('click', () => {
+    localStorage.removeItem('bottleCalibration');
+    calibrationData = { withBottle: null, withoutBottle: null };
+
+    recalibrateBtn.style.display = 'none';
+    startBtn.style.display = 'none';
+    calibrateWithBtn.style.display = 'inline-block';
+    calibrateWithoutBtn.style.display = 'inline-block';
+    calibrationStatus.textContent = 'Calibration reset. Please calibrate again.';
+});
 
   // Button event listeners
   calibrateWithBtn.addEventListener('click', () => calibrate('withBottle'));

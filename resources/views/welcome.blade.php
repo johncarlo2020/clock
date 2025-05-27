@@ -311,9 +311,10 @@
     <canvas id="canvas" style="display: none;"></canvas>
     <div id="calibrationStatus" style="margin: 10px 0; font-weight: bold;"></div>
 
-    <button id="calibrateWith" onclick="calibrate('withBottle')">Calibrate With Bottle</button>
-    <button id="calibrateWithout" onclick="calibrate('withoutBottle')">Calibrate Without Bottle</button>
-    <button id="startBtn" onclick="startDetection()" style="display: none;">Start Detection</button>
+    <button id="calibrateWith">Calibrate With Bottle</button>
+    <button id="calibrateWithout">Calibrate Without Bottle</button>
+    <button id="startBtn" style="display: none;">Start Detection</button>
+    <button id="recalibrateBtn" style="display: none;">Recalibrate</button>
 
     <div class="clocks-container" id="clocksContainer">
         @foreach ($clocks as $index => $item)
